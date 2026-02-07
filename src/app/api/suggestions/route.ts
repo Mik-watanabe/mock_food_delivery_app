@@ -12,10 +12,16 @@ export async function GET(request: NextRequest) {
     const sessionToken = params.get('sessionToken') || '';
 
     if (!query) {
-        return NextResponse.json(error('Query parameter is required'), { status: 400 });
+        return NextResponse.json(
+            { error: 'Query parameter is required' },
+            { status: 400 }
+        );
     }
     if (!sessionToken) {
-        return NextResponse.json(error('Session token is required'), { status: 400 });
+        return NextResponse.json(
+            { error: 'Session token is required' },
+            { status: 400 }
+        );
     }
 
     try {
@@ -56,8 +62,7 @@ export async function GET(request: NextRequest) {
 
         if (!response.ok) {
             console.error(body);
-
-            throw new Error(`Autocomplete request error: ${response.status} ${response.statusText}`);
+            throw new Error(`Autocomplete request error`);
         }
 
         const suggestions = body.suggestions || [];
@@ -88,8 +93,6 @@ export async function GET(request: NextRequest) {
         // console.log(JSON.stringify(body, null, 2));
     } catch (error) {
         console.error('Error fetching suggestions:', error);
-        return NextResponse.json({ error: "unexpected error happened" }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
-
-    return NextResponse.json({ suggestions: [] });
 }
