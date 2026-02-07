@@ -6,7 +6,13 @@ interface RestaurantListProps {
 }
 const RestaurantList = ({ restaurants }: RestaurantListProps) => {
   return (
-    <ul className="hidden md:grid grid-cols-4 gap-5">
+    <ul
+      className="
+      grid
+    grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))]
+    lg:grid-cols-4
+    gap-5"
+    >
       {restaurants.map((restaurant) => (
         <li key={restaurant.id}>
           <RestaurantCard restaurant={restaurant} />

@@ -1,13 +1,13 @@
 import Section from "@/components/Section";
 import RestaurantCard from "@/components/RestaurantCard";
 import CarouselContainer from "@/components/CarouselContainer";
-import { fetchAsianRestaurants, fetchRestaurants } from "@/lib/restaurants/api";
+import { fetchAsianRestaurants, fetchAllRestaurants } from "@/lib/restaurants/api";
 import RestaurantList from "@/components/RestaurantList";
 import CategoriesBar from "@/components/CategoriesBar";
 
 const Home = async () => {
   const { restaurants: asianRestaurants } = await fetchAsianRestaurants();
-  const { restaurants } = await fetchRestaurants();
+  const { restaurants } = await fetchAllRestaurants();
   return (
     <>
       <div className="min-h-screen flex flex-col space-y-4 md:space-y-8 pt-8 md:pt-16">

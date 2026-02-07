@@ -29,24 +29,30 @@ function buildHeaders() {
     }
 }
 
+function buildBaseRequestBody(params?: NearbySearchParams) {
+    return {
+        languageCode: params?.languageCode ?? 'en',
+        rankPreference: params?.rankPreference ?? 'distance',
+    }
+}
+
 export async function fetchNearbyRestaurants(params: NearbySearchParams) {
     const url = "https://places.googleapis.com/v1/places:searchNearby";
 
     // change to Included Primary Type when search by category
     const requestBody = {
-        includedTypes: params.includedTypes,
-        maxResultCount: params.maxResultCount ?? 10,
+        ...buildBaseRequestBody(params),
         locationRestriction: {
             circle: {
                 center: {
-                    latitude: params.lat ?? DEFAULT_CENTER.lat,
-                    longitude: params.lng ?? DEFAULT_CENTER.lng
+                    latitude: params?.lat ?? DEFAULT_CENTER.lat,
+                    longitude: params?.lng ?? DEFAULT_CENTER.lng
                 },
-                radius: params.radius ?? DEFAULT_RADIUS
+                radius: params?.radius ?? DEFAULT_RADIUS
             }
         },
-        languageCode: params.languageCode ?? 'en',
-        rankPreference: params.rankPreference ?? 'distance',
+        includedTypes: params.includedTypes,
+        maxResultCount: params?.maxResultCount ?? 10,
     }
 
     const response = await fetch(url, {
@@ -79,7 +85,7 @@ export async function fetchAsianRestaurants() {
 }
 
 
-export async function fetchRestaurants() {
+export async function fetchAllRestaurants() {
     const { restaurants } = await fetchRestaurantsByTypes(restaurantTypes)
     return { restaurants: restaurants.filter((restaurant) => restaurantTypes.includes(restaurant.primaryType)) };
 }
@@ -88,4 +94,45 @@ export async function getRestaurantPhotoUrl(name: string, maxWidth = 400, maxHei
     "use cache";
     const url = `https://places.googleapis.com/v1/${name}/media?key=${process.env.GOOGLE_API_KEY}&maxWidthPx=${maxWidth}&maxHeightPx=${maxHeight}`;
     return url;
+}
+// Search by Keyword
+
+export async function fetchRestaurantsByKeyword(keywords: string) {
+    const url = "https://places.googleapis.com/v1/places:searchText";
+
+    // change to Included Primary Type when search by category
+    const requestBody = {
+        ...buildBaseRequestBody(),
+        textQuery: keywords,
+        pageSize: 10,
+        locationBias: {
+            circle: {
+                center: {
+                    latitude: DEFAULT_CENTER.lat,
+                    longitude: DEFAULT_CENTER.lng
+                },
+                radius: DEFAULT_RADIUS
+            }
+        },
+    }
+
+    console.log(requestBody);
+    const response = await fetch(url, {
+        method: "POST",
+        headers: buildHeaders(),
+        body: JSON.stringify(requestBody),
+        cache: "force-cache",
+        next: { revalidate: 86400 }, // Revalidate every 24 hours
+    })
+
+
+    const body: GooglePlacesApiResponse = await response.json();
+
+    if (!response.ok) {
+        console.error(body);
+        throw new Error(`Failed keyword search request: ${response.status} ${response.statusText}`);
+    }
+
+    const restaurants = await transformRestaurantResults(body)
+    return { restaurants }
 }
