@@ -2,6 +2,7 @@ import RestaurantList from "@/components/RestaurantList";
 import {
   fetchRestaurantsByTypes,
   fetchRestaurantsByKeyword,
+  fetchLocation,
 } from "@/lib/restaurants/api";
 import { Restaurant } from "@/types/data";
 import { CATEGORY_MAP } from "@/lib/restaurants/constants";
@@ -13,14 +14,14 @@ const SearchPage = async ({
 }: {
   searchParams: Promise<{ category: string; restaurant: string }>;
 }) => {
-  const { category, restaurant } = await searchParams;
+  const [{category, restaurant}, location] = await Promise.all([searchParams, fetchLocation()]);
   let data: { restaurants: Restaurant[] } = { restaurants: [] };
 
   const mode = category ? "category" : restaurant ? "keyword" : "none";
 
   switch (mode) {
     case "category":
-      data = await fetchRestaurantsByTypes([category!]);
+      data = await fetchRestaurantsByTypes({includedTypes: [category], lat: location.lat, lng: location.lng});
 
       return (
         <div className="min-h-screen flex flex-col space-y-4 md:space-y-8 py-8 md:py-16">

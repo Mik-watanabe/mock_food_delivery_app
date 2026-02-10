@@ -1,11 +1,11 @@
-import { GoogleAutoCompleteApiResponse, PlaceSuggestion } from '@/types/data';
-import { error } from 'console';
+import { GoogleAutoCompleteApiResponse, AddressSuggestion } from '@/types/data';
 import { NextRequest, NextResponse } from 'next/server'
 
 const DEFAULT_CENTER = { lat: 43.8828, lng: -79.4403 } // Richmond Hill
 const DEFAULT_RADIUS = 3000
 
 export async function GET(request: NextRequest) {
+
     const params = request.nextUrl.searchParams;
 
     const query = params.get('query') || '';
@@ -35,8 +35,6 @@ export async function GET(request: NextRequest) {
         const requestBody = {
             sessionToken: sessionToken,
             input: query,
-            "includeQueryPredictions": true,
-            includedPrimaryTypes: ["restaurant"],
             locationBias: {
                 circle: {
                     center: {
@@ -47,7 +45,6 @@ export async function GET(request: NextRequest) {
                 }
             },
             languageCode: 'en',
-            // includedRegionCodes: ["ca"],
         }
 
         const response = await fetch(url, {
@@ -69,28 +66,20 @@ export async function GET(request: NextRequest) {
 
         const results = suggestions.flatMap(suggestion => {
             const place = suggestion.placePrediction
-            const query = suggestion.queryPrediction
 
             if (place?.placeId && place.structuredFormat?.mainText?.text) {
                 return [{
-                    type: 'placePrediction',
                     placeId: place.placeId,
                     placeName: place.structuredFormat.mainText.text,
-                } as PlaceSuggestion]
-            }
-
-            if (query?.text?.text) {
-                return [{
-                    type: 'queryPrediction',
-                    placeName: query.text.text,
-                } as PlaceSuggestion]
+                    address_text: place.structuredFormat.secondaryText?.text || '',
+                } as AddressSuggestion]
             }
 
             return []
         })
+
         return NextResponse.json({ suggestions: results });
 
-        // console.log(JSON.stringify(body, null, 2));
     } catch (error) {
         console.error('Error fetching suggestions:', error);
         return NextResponse.json({ error: (error as Error).message }, { status: 500 });

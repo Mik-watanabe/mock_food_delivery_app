@@ -32,13 +32,14 @@ const SearchBar = () => {
   const fetchSuggestions = useDebouncedCallback(async (query: string) => {
     if (query.trim() === "") {
       setSuggestions([]);
+      setLoading(false);
       return;
     }
 
     try {
       setErrorMessage(null);
       const response = await fetch(
-        `/api/suggestions?query=${query}&sessionToken=${sessionToken}`,
+        `/api/suggestions/restaurant?query=${query}&sessionToken=${sessionToken}`,
       );
 
       const body = await response.json();
@@ -69,7 +70,6 @@ const SearchBar = () => {
   const handleInputChange = (value: string) => {
     setLoading(true);
     const trimmedValue = value.trim();
-    console.log(trimmedValue);
     setInputValue(trimmedValue);
     setIsShow(trimmedValue.length > 0);
     if (trimmedValue.length === 0) {

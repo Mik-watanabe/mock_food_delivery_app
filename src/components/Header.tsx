@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MenuSidebar from "./MenuSheet";
 import SearchBar from "./SearchBar";
+import AddressModal from "./AddressModal";
 
 const Header = () => {
   return (
@@ -10,7 +11,7 @@ const Header = () => {
         <div className="font-bold">
           <Link href={"/"}>Delivery App</Link>
         </div>
-        <div>select address</div>
+        <AddressModal />
         <div className="flex-1 bg-yellow-400">
             <SearchBar />
         </div>

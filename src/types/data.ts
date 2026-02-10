@@ -5,6 +5,13 @@ export interface GooglePlacesApiResponse {
     error?: string;
 }
 
+export interface GooglePlacesDetailsApiResponse {
+    location?: {
+        latitude: number;
+        longitude: number;
+    };
+}
+
 export interface PlacePhoto {
     name: string;
 }
@@ -63,6 +70,9 @@ export interface PlacePrediction {
     structuredFormat?: {
         mainText?: {
             text?: string;
+        },
+        secondaryText?: {
+            text?: string;
         }
     }
 }
@@ -79,3 +89,24 @@ export interface PlaceSuggestion {
     placeName: string;
 }
 
+export interface AddressSuggestion {
+    placeId: string;
+    placeName: string;
+    address_text: string;
+}
+
+
+export interface PlaceDetails {
+    location?: {
+        latitude: number;
+        longitude: number;
+    };
+}
+
+export interface Address {
+    id: number;
+    name: string;   
+    address_text: string;
+    lat: number;
+    lng: number;
+}
