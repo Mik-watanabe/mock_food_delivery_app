@@ -3,7 +3,7 @@ import {
   fetchRestaurantsByTypes,
   fetchRestaurantsByKeyword,
   fetchLocation,
-} from "@/lib/restaurants/api";
+} from "@/lib/restaurants/googlePlaces";
 import { Restaurant } from "@/types/data";
 import { CATEGORY_MAP } from "@/lib/restaurants/constants";
 import CategoriesBar from "@/components/CategoriesBar";

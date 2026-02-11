@@ -2,6 +2,7 @@ import { GooglePlacesApiResponse, GooglePlacesDetailsApiResponse, NearbySearchPa
 import { transformRestaurantResults } from "./utils";
 import { createClient } from "../supabase/server";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 const restaurantTypes = [
     "cafe",
@@ -162,7 +163,7 @@ export async function fetchPlaceDetails(placeId: string, fields: string[], sessi
     return { res }
 }
 
-export async function fetchLocation() {
+export const fetchLocation = cache(async () => {
     console.log("Fetching user location...");
     const supabase = await createClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -183,4 +184,4 @@ export async function fetchLocation() {
         lat: selectedAddress?.addresses?.lat ?? DEFAULT_CENTER.lat,
         lng: selectedAddress?.addresses?.lng ?? DEFAULT_CENTER.lng,
     }
-}
+})

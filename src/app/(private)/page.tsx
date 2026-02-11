@@ -1,7 +1,7 @@
 import Section from "@/components/Section";
 import RestaurantCard from "@/components/RestaurantCard";
 import CarouselContainer from "@/components/CarouselContainer";
-import { fetchAsianRestaurants, fetchAllRestaurants, fetchLocation } from "@/lib/restaurants/api";
+import { fetchAsianRestaurants, fetchAllRestaurants, fetchLocation } from "@/lib/restaurants/googlePlaces";
 import RestaurantList from "@/components/RestaurantList";
 import CategoriesBar from "@/components/CategoriesBar";
 
