@@ -122,6 +122,7 @@ const AddressModal = () => {
         result.error || "Failed to retrieve the address. Please try again.",
       );
       console.error("Error:", result.error);
+      setLoading(false);
       return;
     }
     setSessionToken(uuidv4());

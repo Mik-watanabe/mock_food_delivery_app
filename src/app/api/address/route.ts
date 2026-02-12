@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { Address } from '@/types/data';
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 
 export async function GET() {
@@ -33,7 +33,7 @@ export async function GET() {
 
         return NextResponse.json({ addresses, selectedAddress });
     } catch (error) {
-        console.error("An unexpected while fetching address", error);
+        console.error("An unexpected error while fetching address", error);
         return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 }

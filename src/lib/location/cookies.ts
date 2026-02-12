@@ -15,7 +15,7 @@ export async function readLocationCookie(): Promise<Location> {
 
     try {
         const parsed = JSON.parse(raw) as Location;
-        if (typeof parsed.lat !== "number" && typeof parsed.lng !== "number") {
+        if (typeof parsed.lat !== "number" || typeof parsed.lng !== "number") {
             return DEFAULT_LOCATION;
         }
         return parsed;

@@ -5,7 +5,7 @@ import { fetchPlaceDetails } from "@/lib/restaurants/googlePlaces";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { addAddressForUser, deleteAddressForUser, updateSelectedAddressForUser } from "@/lib/location/service";
-import { cookies } from "next/dist/server/request/cookies";
+import { cookies } from "next/headers";
 
 interface SelectedAddressActionParams {
     suggestion: AddressSuggestion;
@@ -19,11 +19,12 @@ const DEFAULT_LOCATION: Location = {
 
 export async function registerAddressAction({ suggestion, sessionToken }: SelectedAddressActionParams) {
 
-    let data;
     try {
+        const user = await requireUser();
+        
         // Retrieve address details using the place ID from the suggestion
         // Use a session token to optimize Google API costs.
-        data = await fetchPlaceDetails(suggestion.placeId, ["location"], sessionToken);
+        const data = await fetchPlaceDetails(suggestion.placeId, ["location"], sessionToken);
 
         if (
             !data.res.location ||
@@ -35,7 +36,6 @@ export async function registerAddressAction({ suggestion, sessionToken }: Select
 
         // TODO: ADD TRANSACTION HERE TO ENSURE BOTH INSERT AND UPDATE HAPPEN TOGETHER
         // insert address and user info into supabase
-        const user = await requireUser();
         const insertedAddress = await addAddressForUser({
             userId: user.id,
             name: suggestion.placeName,
