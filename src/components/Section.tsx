@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, Suspense, useState } from "react";
+import { ReactNode, useState } from "react";
 import { Button } from "./ui/button";
 import useMediaQuery from "./useMediaQuery";
 

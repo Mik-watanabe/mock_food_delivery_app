@@ -1,5 +1,4 @@
 import { GoogleAutoCompleteApiResponse, PlaceSuggestion } from '@/types/data';
-import { error } from 'console';
 import { NextRequest, NextResponse } from 'next/server'
 
 const DEFAULT_CENTER = { lat: 43.8828, lng: -79.4403 } // Richmond Hill
@@ -10,6 +9,8 @@ export async function GET(request: NextRequest) {
 
     const query = params.get('query') || '';
     const sessionToken = params.get('sessionToken') || '';
+    const lat = parseFloat(params.get('lat') || '') || DEFAULT_CENTER.lat;
+    const lng = parseFloat(params.get('lng') || '') || DEFAULT_CENTER.lng;
 
     if (!query) {
         return NextResponse.json(
@@ -40,8 +41,8 @@ export async function GET(request: NextRequest) {
             locationBias: {
                 circle: {
                     center: {
-                        latitude: DEFAULT_CENTER.lat,
-                        longitude: DEFAULT_CENTER.lng
+                        latitude: lat,
+                        longitude: lng
                     },
                     radius: DEFAULT_RADIUS
                 }

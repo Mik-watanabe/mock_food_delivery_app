@@ -1,4 +1,4 @@
-import { GooglePlacesApiResponse, NearbySearchParams } from "@/types/data";
+import { GooglePlaceDetails, GooglePlacesApiResponse, GooglePlacesDetailsApiResponse, NearbySearchParams } from "@/types/data";
 import { transformRestaurantResults } from "./utils";
 
 const restaurantTypes = [
@@ -21,11 +21,11 @@ const restaurantTypes = [
 const DEFAULT_CENTER = { lat: 43.8828, lng: -79.4403 } // Richmond Hill
 const DEFAULT_RADIUS = 3000
 
-function buildHeaders() {
+function buildHeaders(fields?: string) {
     return {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": process.env.GOOGLE_API_KEY!,
-        "X-Goog-FieldMask": "places.displayName,places.id,places.location,places.primaryType,places.photos",
+        "X-Goog-FieldMask": fields ?? "places.displayName,places.id,places.location,places.primaryType,places.photos",
     }
 }
 
@@ -45,8 +45,8 @@ export async function fetchNearbyRestaurants(params: NearbySearchParams) {
         locationRestriction: {
             circle: {
                 center: {
-                    latitude: params?.lat ?? DEFAULT_CENTER.lat,
-                    longitude: params?.lng ?? DEFAULT_CENTER.lng
+                    latitude: params.lat,
+                    longitude: params.lng
                 },
                 radius: params?.radius ?? DEFAULT_RADIUS
             }
@@ -74,19 +74,19 @@ export async function fetchNearbyRestaurants(params: NearbySearchParams) {
     return body;
 }
 
-export async function fetchRestaurantsByTypes(includedTypes: string[]) {
-    const body = await fetchNearbyRestaurants({ includedTypes })
+export async function fetchRestaurantsByTypes({includedTypes, lat, lng}: NearbySearchParams) {
+    const body = await fetchNearbyRestaurants({ includedTypes, lat, lng })
     const restaurants = await transformRestaurantResults(body)
     return { restaurants }
 }
 
-export async function fetchAsianRestaurants() {
-    return fetchRestaurantsByTypes(['asian_restaurant']);
+export async function fetchAsianRestaurants(location = DEFAULT_CENTER) {
+    return fetchRestaurantsByTypes({includedTypes: ['asian_restaurant'], lat: location.lat, lng: location.lng });
 }
 
 
-export async function fetchAllRestaurants() {
-    const { restaurants } = await fetchRestaurantsByTypes(restaurantTypes)
+export async function fetchAllRestaurants(location = DEFAULT_CENTER) {
+    const { restaurants } = await fetchRestaurantsByTypes({includedTypes: restaurantTypes, lat: location.lat, lng: location.lng })
     return { restaurants: restaurants.filter((restaurant) => restaurantTypes.includes(restaurant.primaryType)) };
 }
 
@@ -96,11 +96,9 @@ export async function getRestaurantPhotoUrl(name: string, maxWidth = 400, maxHei
     return url;
 }
 // Search by Keyword
-
-export async function fetchRestaurantsByKeyword(keywords: string) {
+export async function fetchRestaurantsByKeyword(keywords: string, location: { lat: number; lng: number } = DEFAULT_CENTER) {
     const url = "https://places.googleapis.com/v1/places:searchText";
 
-    // change to Included Primary Type when search by category
     const requestBody = {
         ...buildBaseRequestBody(),
         textQuery: keywords,
@@ -108,15 +106,14 @@ export async function fetchRestaurantsByKeyword(keywords: string) {
         locationBias: {
             circle: {
                 center: {
-                    latitude: DEFAULT_CENTER.lat,
-                    longitude: DEFAULT_CENTER.lng
+                    latitude: location.lat,
+                    longitude: location.lng
                 },
                 radius: DEFAULT_RADIUS
             }
         },
     }
 
-    console.log(requestBody);
     const response = await fetch(url, {
         method: "POST",
         headers: buildHeaders(),
@@ -124,7 +121,6 @@ export async function fetchRestaurantsByKeyword(keywords: string) {
         cache: "force-cache",
         next: { revalidate: 86400 }, // Revalidate every 24 hours
     })
-
 
     const body: GooglePlacesApiResponse = await response.json();
 
@@ -135,4 +131,31 @@ export async function fetchRestaurantsByKeyword(keywords: string) {
 
     const restaurants = await transformRestaurantResults(body)
     return { restaurants }
+}
+
+export async function fetchPlaceDetails(placeId: string, fields: string[], sessionToken: string = "") {
+    const url = new URL(`https://places.googleapis.com/v1/places/${placeId}`);
+    url.searchParams.set("languageCode", "en");
+    if (sessionToken) url.searchParams.set("sessionToken", sessionToken);
+
+    const response = await fetch(url, {
+        method: "GET",
+        headers: buildHeaders(fields.join(",")),
+        cache: "force-cache",
+        next: { revalidate: 86400 }, // Revalidate every 24 hours
+    })
+
+    const body: GooglePlacesDetailsApiResponse = await response.json();
+
+    if (!response.ok) {
+        console.error(body);
+        throw new Error(`Failed place details request: ${response.status} ${response.statusText}`);
+    }
+
+
+    const res: Partial<GooglePlaceDetails> = {};
+    if (fields.includes("location") && body.location) {
+        res.location = body.location;
+    }
+    return { res }
 }

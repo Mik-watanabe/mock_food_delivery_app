@@ -6,6 +6,7 @@ const useMediaQuery = (query = "(min-width: 768px)") => {
   const [matches, setMatches] = useState<boolean>(false);
 
   useEffect(() => {
+ 
     const media = window.matchMedia(query);
 
     setMatches(media.matches);
