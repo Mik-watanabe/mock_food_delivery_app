@@ -1,15 +1,21 @@
 "use server"
 
-import { AddressSuggestion } from "@/types/data";
+import { AddressSuggestion, Location } from "@/types/data";
 import { fetchPlaceDetails } from "@/lib/restaurants/googlePlaces";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { addAddressForUser, deleteAddressForUser, updateSelectedAddressForUser } from "@/lib/location/service";
+import { cookies } from "next/dist/server/request/cookies";
 
 interface SelectedAddressActionParams {
     suggestion: AddressSuggestion;
     sessionToken: string;
 }
+
+const COOKIE_KEY = "selected_location";
+const DEFAULT_LOCATION: Location = {
+    lat: 43.8828, lng: -79.4403
+};
 
 export async function registerAddressAction({ suggestion, sessionToken }: SelectedAddressActionParams) {
 
@@ -37,8 +43,10 @@ export async function registerAddressAction({ suggestion, sessionToken }: Select
             lat: data.res.location.latitude,
             lng: data.res.location.longitude,
         });
+        const location = await updateSelectedAddressForUser(user.id, insertedAddress.id);
 
-        await updateSelectedAddressForUser(user.id, insertedAddress.id);
+        await writeLocationCookie(location); // Update the cookie to default location until we implement fetching the actual location from the selected address
+        console.log("Updated selected address and cookie location:", location);
 
         revalidatePath("/", "layout");
         return { ok: true as const };
@@ -51,9 +59,13 @@ export async function registerAddressAction({ suggestion, sessionToken }: Select
 export async function updateSelectedAddressAction(addressId: number) {
     try {
         const user = await requireUser();
-        await updateSelectedAddressForUser(user.id, addressId); //lib/location/service.ts
+        const location = await updateSelectedAddressForUser(user.id, addressId); //lib/location/service.ts
+
+        await writeLocationCookie(location); // Update the cookie to default location until we implement fetching the actual location from the selected address
+        console.log("Updated selected address and cookie location:", location);
 
         revalidatePath("/", "layout");
+
         return { ok: true as const };
     } catch (e) {
         console.error("updateSelectedAddressAction failed:", e);
@@ -64,12 +76,14 @@ export async function updateSelectedAddressAction(addressId: number) {
     }
 }
 
-export async function deleteAddressAction(addressId: number) {
+export async function deleteAddressAction(addressId: number, isSelectedAddress: boolean) {
+
     try {
         const user = await requireUser();
         await deleteAddressForUser(user.id, addressId); //lib/location/service.ts
 
         revalidatePath("/", "layout");
+        if (isSelectedAddress) await writeLocationCookie(DEFAULT_LOCATION);
         return { ok: true as const };
     } catch (e) {
         console.error("deleteAddressAction failed:", e);
@@ -78,4 +92,13 @@ export async function deleteAddressAction(addressId: number) {
             error: "Failed to delete the address. Please try again.",
         };
     }
+}
+
+async function writeLocationCookie(location: Location) {
+    const cookieStore = await cookies();
+    cookieStore.set(COOKIE_KEY, JSON.stringify(location), {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+    })
 }

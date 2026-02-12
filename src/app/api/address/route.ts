@@ -3,7 +3,7 @@ import { Address } from '@/types/data';
 import { NextRequest, NextResponse } from 'next/server'
 
 
-export async function GET(request: NextRequest) {
+export async function GET() {
 
     try {
         // Get a list of addresses associated with the user from the database

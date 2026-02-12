@@ -96,16 +96,23 @@ export interface AddressSuggestion {
 }
 
 
-export interface PlaceDetails {
-    location?: {
-        latitude: number;
-        longitude: number;
-    };
+export interface Location {
+    lat: number;
+    lng: number;
+}
+
+export interface GoogleLocation {
+    latitude: number;
+    longitude: number;
+}
+
+export interface GooglePlaceDetails {
+    location?: GoogleLocation;
 }
 
 export interface Address {
     id: number;
-    name: string;   
+    name: string;
     address_text: string;
     lat: number;
     lng: number;

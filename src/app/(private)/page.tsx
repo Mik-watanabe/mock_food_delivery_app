@@ -1,13 +1,14 @@
 import Section from "@/components/Section";
 import RestaurantCard from "@/components/RestaurantCard";
 import CarouselContainer from "@/components/CarouselContainer";
-import { fetchAsianRestaurants, fetchAllRestaurants, fetchLocation } from "@/lib/restaurants/googlePlaces";
+import { fetchAsianRestaurants, fetchAllRestaurants } from "@/lib/restaurants/googlePlaces";
 import RestaurantList from "@/components/RestaurantList";
 import CategoriesBar from "@/components/CategoriesBar";
+import { resolveUserLocation } from "@/lib/location/server";
 
 const Home = async () => {
-  const location = await fetchLocation();
-console.log("User location:", location);
+  const location = await resolveUserLocation();
+  console.log("Home: User location:", location);
   const { restaurants: asianRestaurants } = await fetchAsianRestaurants(location);
   const { restaurants } = await fetchAllRestaurants(location);
   return (

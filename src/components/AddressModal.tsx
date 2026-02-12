@@ -23,7 +23,7 @@ import {
   MapPinPlus,
   Trash2,
 } from "lucide-react";
-import { useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 import { Address, AddressSuggestion } from "@/types/data";
@@ -125,7 +125,9 @@ const AddressModal = () => {
       return;
     }
     setSessionToken(uuidv4());
-    mutate(); // Refresh the list of registered addresses after adding a new one
+    await mutate(); // Refresh the list of registered addresses after adding a new one
+
+    router.refresh();
     setInputAddress("");
     setLoading(false);
   };
@@ -143,8 +145,8 @@ const AddressModal = () => {
       return;
     }
     mutate(); // Refresh the list of registered addresses after updating the selected one
-    setIsModalOpen(false);
     router.refresh(); // Refresh the page to update the selected address in the header
+    setIsModalOpen(false);
   };
 
   const handleAddressDelete = async (addressId: number) => {
@@ -153,8 +155,8 @@ const AddressModal = () => {
     if (!window.confirm("Are you sure you want to delete this address?")) {
       return;
     }
-
-    const res = await deleteAddressAction(addressId);
+    const isSelectedAddress = data?.selectedAddress?.id === addressId;
+    const res = await deleteAddressAction(addressId, isSelectedAddress);
 
     if (!res.ok) {
       alert(res.error || "Failed to delete the address. Please try again.");
@@ -162,9 +164,14 @@ const AddressModal = () => {
       return;
     }
     mutate(); // Refresh the list of registered addresses after deletion
+
+    if (isSelectedAddress) {
+      router.refresh(); //only refresh the page if the deleted address was same as selected one.
+    }
   };
 
   const fetcher = async (url: string) => {
+    console.log("FETCHING:", url);
     const response = await fetch(url);
     const data = await response.json();
 
@@ -204,7 +211,7 @@ const AddressModal = () => {
           <DialogDescription className="sr-only">
             Register address to find restaurants around you and get your food
             delivered! You can register multiple addresses, such as home, work,
-            or a friend's place.
+            or a friend&apos;s place.
           </DialogDescription>
         </DialogHeader>
         <Command shouldFilter={false}>
@@ -279,7 +286,7 @@ const AddressModal = () => {
                         handleAddressDelete(address.id);
                       }}
                     >
-                      <Trash2 />
+                      <Trash2 className="m-auto" />
                     </Button>
                   </CommandItem>
                 ))}

@@ -18,13 +18,16 @@ import {
   SearchIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Location } from "@/types/data";
 
-const SearchBar = () => {
+const SearchBar = ({ location }: { location: Location }) => {
+
   const [isShow, setIsShow] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [sessionToken, setSessionToken] = useState(uuidv4());
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const router = useRouter();
@@ -39,7 +42,7 @@ const SearchBar = () => {
     try {
       setErrorMessage(null);
       const response = await fetch(
-        `/api/suggestions/restaurant?query=${query}&sessionToken=${sessionToken}`,
+        `/api/suggestions/restaurant?query=${query}&sessionToken=${sessionToken}&lat=${location.lat}&lng=${location.lng}`,
       );
 
       const body = await response.json();
@@ -89,7 +92,7 @@ const SearchBar = () => {
 
   const closeSuggestions = () => {
     setIsShow(false);
-  }
+  };
 
   const handleSuggestionSelect = (suggestion: PlaceSuggestion) => {
     console.log("Selected suggestion:", suggestion);

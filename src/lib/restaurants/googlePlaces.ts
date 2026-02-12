@@ -1,8 +1,5 @@
-import { GooglePlacesApiResponse, GooglePlacesDetailsApiResponse, NearbySearchParams, PlaceDetails } from "@/types/data";
+import { GooglePlaceDetails, GooglePlacesApiResponse, GooglePlacesDetailsApiResponse, NearbySearchParams } from "@/types/data";
 import { transformRestaurantResults } from "./utils";
-import { createClient } from "../supabase/server";
-import { redirect } from "next/navigation";
-import { cache } from "react";
 
 const restaurantTypes = [
     "cafe",
@@ -156,32 +153,9 @@ export async function fetchPlaceDetails(placeId: string, fields: string[], sessi
     }
 
 
-    const res: Partial<PlaceDetails> = {};
+    const res: Partial<GooglePlaceDetails> = {};
     if (fields.includes("location") && body.location) {
         res.location = body.location;
     }
     return { res }
 }
-
-export const fetchLocation = cache(async () => {
-    console.log("Fetching user location...");
-    const supabase = await createClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-        redirect("/login");
-    }
-
-    const {data: selectedAddress, error: addressError} = await supabase
-        .from("profiles")
-        .select("addresses(lat, lng)").eq("id", user.id).single();
-
-     if (addressError) {
-        console.error("Failed to retrieve selected address location:", addressError);
-        throw new Error("Failed to retrieve selected address location");
-    }
-
-    return {
-        lat: selectedAddress?.addresses?.lat ?? DEFAULT_CENTER.lat,
-        lng: selectedAddress?.addresses?.lng ?? DEFAULT_CENTER.lng,
-    }
-})
